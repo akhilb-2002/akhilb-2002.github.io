@@ -1,0 +1,226 @@
+:root {
+  --background: #f0efea;
+  --foreground: #171717;
+  --tst: bottom 0.5s ease 0s;
+  --dark: #e6e6e6ee;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--source-serif-font), Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  min-height: 100vh;
+}
+
+.serif {
+  font-family: ui-serif, var(--font-pt-serif), var(--font-noto-serif), Georgia,
+    serif;
+}
+
+/* Elements marked with sans or font-sans will use Geist */
+.font-sans,
+.sans {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+#chartdiv {
+  width: 100%;
+  height: 500px; /* Default height */
+  max-width: 100%;
+  max-height: 70vh; /* Add max-height relative to viewport height */
+}
+
+#photo-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: start;
+}
+
+
+/* Added Swiper CSS */
+.swiper {
+	width: 100%;
+	padding-top: 50px;
+	padding-bottom: 50px;
+}
+
+.swiper-slide {
+	background-position: center;
+	background-size: cover;
+	width: 400px; /* Default width */
+	height: 500px; /* Default height */
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+.swiper-container-3d .swiper-slide-shadow-left {
+	background-image: linear-gradient(to left, #000, #fff0);
+	border-right: 1px solid #000;
+	border-radius: 10px;
+}
+
+.swiper-container-3d .swiper-slide-shadow-right {
+	background-image: linear-gradient(to right, #000, #fff0);
+	box-shadow: 0 0 0 1px #000;
+	border-radius: 10px;
+}
+
+.swiper-pagination-bullet {
+	background: #696969;
+	transition: all 0.5s ease 0s;
+	border-radius: 8px;
+}
+
+.swiper-pagination-bullet-active {
+	background: #5f5842;
+	width: 30px;
+}
+
+.info {
+	position: absolute;
+	width: calc(100% + 2px);
+	height: auto; /* Changed from fixed calc to auto */
+	text-align: center;
+  /* Adjusted background gradient for a more subtle effect and to ensure text is readable */
+	background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.9) 100%);
+	padding: 5px 10px; /* Adjusted padding: 5px top/bottom, 10px left/right */
+	left: 0;
+	bottom: -100%; /* Keep off-screen initially */
+	box-sizing: border-box;
+	transition: var(--tst);
+}
+
+.swiper-slide-active .info {
+	bottom: 0; /* Changed from -1px to 5px to push up by 5px from the bottom */
+	transition: var(--tst);
+}
+
+.info span {
+	width: 100%;
+	margin: 0.15em 0; /* Increased from 0.1em to 0.15em to increase gap */
+	display: inline-block;
+	padding: 0.3em 0.5em 0.3em 3em; /* Adjusted padding */
+	box-sizing: border-box;
+	color: var(--dark);
+	text-align: left;
+	position: relative;
+	font-size: 12px; /* Adjusted font size */
+	font-weight: bold; /* Added bold font weight */
+	border-radius: 2em;
+  	font-family: serif; /* Added serif font family */
+}
+
+.info span:hover {
+	/*mix-blend-mode: luminosity;*/
+	background: #0008;
+	filter: invert(1);
+}
+
+.info span:before,
+.info span:after {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	background: #fff8;
+	height: 100%;
+	max-width: 2em;
+}
+
+/*photo 2 is now the first child (Photo By) */
+.info span:nth-child(1):before {
+	background: radial-gradient(
+		circle at 50% 42%,
+		var(--dark) 2px,
+		#fff0 3px 4px,
+		var(--dark) 5px 100%
+	);
+	width: 20px;
+	height: 13px;
+	left: 11px;
+	top: 8px;
+	border-radius: 2px;
+}
+
+.info span:nth-child(1):after {
+	border: 10px solid #fff0;
+	border-width: 0px 2px 4px 2px;
+	border-bottom-color: var(--dark);
+	width: 10px;
+	background: #fff0;
+	height: 0px;
+	left: 14px;
+	top: 5px;
+}
+
+/*zone 5 is now the second child (Zone) */
+.info span:nth-child(2):before {
+	width: 16px;
+	height: 16px;
+	border-radius: 100%;
+	left: 13px;
+	top: 3px;
+	background: radial-gradient(
+		circle at 50% 50%,
+		var(--dark) 2px,
+		#fff0 3px 4px,
+		var(--dark) 5px 100%
+	);
+}
+
+.info span:nth-child(2):after {
+	border: 10px solid #fff0;
+	height: 0;
+	border-top-color: var(--dark);
+	border-width: 8px 6px 0 6px;
+	left: 15px;
+	top: 16px;
+	background: #fff0;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #chartdiv {
+    height: 400px; /* Smaller height for tablets */
+  }
+
+  .swiper-slide {
+    width: 300px; /* Adjust slide width for tablets */
+    height: 400px; /* Adjust slide height for tablets */
+  }
+
+  .info {
+    padding: 5px 10px; /* Adjusted padding, removed height */
+  }
+
+  .info span {
+    font-size: 11px; /* Adjusted font size for tablets */
+    padding: 0.3em 0.4em 0.3em 3em;
+  }
+}
+
+@media (max-width: 480px) {
+  #chartdiv {
+    height: 300px; /* Even smaller height for mobile phones */
+  }
+
+  .swiper-slide {
+    width: 80vw; /* Use viewport width for slides on mobile */
+    height: 60vh; /* Use viewport height for slides on mobile */
+  }
+
+  .info {
+    padding: 5px 8px; /* Adjusted padding for smaller screens, removed height */
+  }
+
+  .info span {
+    font-size: 10px; /* Adjusted font size for mobiles */
+    padding: 0.25em 0.3em 0.25em 2.5em;
+  }
+}

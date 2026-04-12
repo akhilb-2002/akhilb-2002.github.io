@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Replace with your actual title -->
+    <title>Akhil's Blogs</title> 
+    
+    <!-- Replace with your actual author and description -->
+    <meta name="author" content="Your Name" /> 
+    <meta name="description" content="Your site description" />
+
+    <!-- Corrected paths to static assets -->
+    <link rel="preload" href="fonts/Newsreader.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/Newsreader-italic.woff2" as="font" type="font/woff2" crossorigin />
+
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Add favicon links if you have them in dario_static -->
+    <!-- <link rel="icon" type="image/x-icon" href="favicon.ico" /> -->
+    <!-- <link rel="apple-touch-icon" href="apple-touch-icon.png" /> -->
+
+    <script src="init-darkmode.js" defer></script>
+    <script src="darkmode.js" defer></script>
+    <script src="footnotes.js" defer></script>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>
+                <!-- Replace with your site title and link -->
+                <!-- <a href="#">Akhil</a>  -->
+            </h1>
+            <div class="header-controls">
+                <div class="toggle-switch">
+                    <input 
+                        type="checkbox" 
+                        id="darkModeToggle" 
+                        class="toggle-input"
+                        aria-label="Toggle dark mode"
+                    />
+                    <label for="darkModeToggle" class="toggle-label">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="content-wrapper">
+        <article class="content-container">
+            <!-- Replace with your static home page content -->
+            <section>
+                <h1 class="smaller">Akhil's Blogs</h1>
+                <p>This is where I ramble about my ideas, mostly technical.</p>
+                <p>I try to stick to a schedule, but my ideas don't. I try to make it a
+                     point to document as and when I can.
+                </p>
+            </section>
+            
+            <!-- Section for posts - Manually added list -->
+            <section>
+                <h2>Posts</h2>
+                <ul>
+                    <!-- Corrected relative paths to blog posts -->
+                    <li><a href="blog_1/my-first-post.html">My First Post</a> (May 5, 2025)</li>
+                    <li><a href="blog_2/another-post.html">Another Interesting Post</a> (May 6, 2025)</li>
+                </ul>
+            </section> 
+
+            <footer>
+                <div class="footer-content">
+                    <!-- Replace with your site title -->
+                    <p>&copy; 2025 - Akhil B.</p> 
+                </div>
+            </footer>
+        </article>
+    </main>
+</body>
+
+</html>
