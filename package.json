@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@xterm/xterm": "^5.5.0",
+    "gsap": "^3.14.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.469.0",
     "next": "15.1.11",

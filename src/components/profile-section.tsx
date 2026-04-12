@@ -1,12 +1,12 @@
 import Image from "next/image";
 import {
-  Mail,
   ArrowUpRight,
   GraduationCap,
 } from "lucide-react";
 import {SiGithub, SiLinkedin, SiX} from "react-icons/si"
 import { AboutMe } from "@/data/aboutme";
 import Link from "next/link";
+import { ScrambleEmail } from "@/components/scramble-email";
 
 interface ProfileSectionProps {
   aboutMe: AboutMe;
@@ -104,15 +104,7 @@ export function ProfileSection({ aboutMe }: ProfileSectionProps) {
           )}
         </div>
         <div className="space-y-2">
-          <a
-            href={`mailto:${aboutMe.email}`}
-            className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Mail size={14} />
-            {aboutMe.email}
-          </a>
+          <ScrambleEmail email={aboutMe.email} />
           {aboutMe.googleScholarUrl && (
             <>
               <br />
