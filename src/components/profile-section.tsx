@@ -2,8 +2,9 @@ import Image from "next/image";
 import {
   ArrowUpRight,
   GraduationCap,
+  LucideLinkedin,
 } from "lucide-react";
-import {SiGithub, SiLinkedin, SiX} from "react-icons/si"
+import {SiGithub, SiX} from "react-icons/si"
 import { AboutMe } from "@/data/aboutme";
 import Link from "next/link";
 import { ScrambleEmail } from "@/components/scramble-email";
@@ -155,7 +156,7 @@ export function ProfileSection({ aboutMe }: ProfileSectionProps) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <SiLinkedin size={14} />
+                <LucideLinkedin size={14} />
                 {aboutMe.linkedinUsername}
               </a>
             </>
