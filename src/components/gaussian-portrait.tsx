@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
+import { SplatNote } from "@/components/splat-note";
 
 /**
  * Renders a portrait stored as fitted 2D Gaussians (made by tools/gaussian-portrait)
@@ -288,6 +289,8 @@ export function GaussianPortrait({ src, alt, className }: GaussianPortraitProps)
   const [failed, setFailed] = useState(false);
   const [shown, setShown] = useState(false);
   const shownRef = useRef(false); // survives clicks made before the file loads
+  // hand-written "this is a gaussian splat!" note: plays on the first reveal only
+  const [note, setNote] = useState<"idle" | "show" | "gone">("idle");
   const setShownRef = useRef<(shown: boolean) => void>(() => {});
 
   useEffect(() => {
@@ -439,43 +442,47 @@ export function GaussianPortrait({ src, alt, className }: GaussianPortraitProps)
     shownRef.current = next;
     setShown(next);
     setShownRef.current(next);
+    setNote((n) => (next && n === "idle" ? "show" : !next && n === "show" ? "gone" : n));
   };
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={shown}
-      aria-label={`${alt}: ${shown ? "click to hide" : "click to reveal"}`}
-      title={shown ? "Click to hide" : "Click to reveal"}
-      className={`group relative block w-full cursor-pointer p-0 border-0 bg-transparent ${className ?? ""}`}
-      style={{ aspectRatio: `${size.W} / ${size.H}` }}
-    >
-      {/* larger than the button by PAD on every side, so the edges can spill out */}
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        data-failed={failed || undefined}
-        style={{
-          position: "absolute",
-          left: `${(-PAD / size.W) * 100}%`,
-          top: `${(-PAD / size.H) * 100}%`,
-          width: `${((size.W + 2 * PAD) / size.W) * 100}%`,
-          height: `${((size.H + 2 * PAD) / size.H) * 100}%`,
-          display: "block",
-          maskImage: mask,
-          WebkitMaskImage: mask,
-          maskComposite: "intersect",
-          WebkitMaskComposite: "source-in",
-        }}
-      />
-      <span
-        className={`pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/40 px-2.5 py-1 text-[10px] uppercase tracking-wider text-white/90 backdrop-blur-sm transition-opacity duration-500 ${
-          shown ? "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" : "opacity-100"
-        }`}
+    <div className="relative">
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={shown}
+        aria-label={`${alt}: ${shown ? "click to hide" : "click to reveal"}`}
+        title={shown ? "Click to hide" : "Click to reveal"}
+        className={`group relative block w-full cursor-pointer p-0 border-0 bg-transparent ${className ?? ""}`}
+        style={{ aspectRatio: `${size.W} / ${size.H}` }}
       >
-        {shown ? "Click to hide" : "Click to reveal"}
-      </span>
-    </button>
+        {/* larger than the button by PAD on every side, so the edges can spill out */}
+        <canvas
+          ref={canvasRef}
+          aria-hidden="true"
+          data-failed={failed || undefined}
+          style={{
+            position: "absolute",
+            left: `${(-PAD / size.W) * 100}%`,
+            top: `${(-PAD / size.H) * 100}%`,
+            width: `${((size.W + 2 * PAD) / size.W) * 100}%`,
+            height: `${((size.H + 2 * PAD) / size.H) * 100}%`,
+            display: "block",
+            maskImage: mask,
+            WebkitMaskImage: mask,
+            maskComposite: "intersect",
+            WebkitMaskComposite: "source-in",
+          }}
+        />
+        <span
+          className={`pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/40 px-2.5 py-1 text-[10px] uppercase tracking-wider text-white/90 backdrop-blur-sm transition-opacity duration-500 ${
+            shown ? "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" : "opacity-100"
+          }`}
+        >
+          {shown ? "Click to hide" : "Click to reveal"}
+        </span>
+      </button>
+      {note !== "idle" && <SplatNote state={note} />}
+    </div>
   );
 }

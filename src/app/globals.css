@@ -25,3 +25,40 @@ body {
 .sans {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+/* Hand-written "this is a gaussian splat!" note (src/components/splat-note.tsx) */
+.splat-note {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #b4532a;
+  transition: opacity 0.5s ease;
+}
+.splat-note[data-state="gone"] {
+  opacity: 0;
+}
+.splat-note .ink-wipe {
+  transform: scaleX(0);
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation-name: ink-wipe;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  animation-fill-mode: forwards;
+}
+.splat-note .ink-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation-name: ink-draw;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+@keyframes ink-wipe {
+  to { transform: scaleX(1); }
+}
+@keyframes ink-draw {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splat-note .ink-wipe { animation: none; transform: none; }
+  .splat-note .ink-draw { animation: none; stroke-dashoffset: 0; }
+}
