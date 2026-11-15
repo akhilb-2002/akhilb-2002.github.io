@@ -3,39 +3,69 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel</title>
-    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
-    <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
-    <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
-    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
-    <link rel="preload" href="fonts/Newsreader.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="fonts/Newsreader-italic.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" /> <!-- Added Swiper CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Akhil's Travel Map</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body style="overflow-y: auto; margin: 0; padding: 0; width: 100vw; min-width: 0;">
-    <div style="width: 100vw; max-width: 100vw; margin: 0; padding: 2rem 0 0 0; box-sizing: border-box;">
-        <h1 style="font-size:2rem; font-family:serif; font-weight:600; margin-bottom:0.25em; text-align:center;">Akhil's Travel Map </h1>
-        <p style="font-size:1rem; color:#666; text-align:center; margin-bottom:1.5em;">This is where I collect pics from places I have explored! Click on some countries to get started!</p>
-        <div id="chartdiv" style="width: 100vw; max-width: 100vw; height: 500px; margin: 0 auto;"></div>
-        <div id="photo-gallery" style="padding: 20px; width: 100vw; max-width: 100vw; box-sizing: border-box;"></div>
-        <div id="countrySwiper" class="swiper" style="display: none; width: 100vw; max-width: 100vw; margin: 0 auto; transform: none;"> <!-- Full width -->
-            <div class="swiper-wrapper">
-                <!-- Slides will be populated by JavaScript -->
-            </div>
-            <div class="swiper-pagination"></div>
+<body>
+    <!-- Same top bar as the main site (src/components/site-header.tsx) -->
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a class="site-brand" href="/">Akhil B</a>
+            <nav class="site-nav">
+                <a href="/#portfolio">Projects</a>
+                <a href="https://" target="_blank" rel="noopener noreferrer">CV</a>
+                <a href="/travel/index.html" aria-current="page">Travel</a>
+                <a href="https://akhils-blogs.ghost.io" target="_blank" rel="noopener noreferrer">Blog</a>
+            </nav>
         </div>
-    </div>
-    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script> <!-- Added Swiper JS -->
+    </header>
+
+    <main class="map-wrap" id="mapWrap">
+        <div class="map-view" id="mapView">
+            <canvas id="map" aria-label="Tile map of the world" role="img"></canvas>
+            <div class="spots" id="spots"></div>
+        </div>
+
+        <div class="zoom-ctrl">
+            <button id="zoomIn" aria-label="Zoom in" title="Zoom in (or scroll)">+</button>
+            <button id="zoomOut" aria-label="Zoom out" title="Zoom out">&minus;</button>
+            <button id="zoomReset" aria-label="Reset zoom" title="Reset zoom" hidden>&#8634;</button>
+        </div>
+
+        <footer>&copy; 2025 - Akhil B.</footer>
+
+        <section class="win" id="win" hidden role="dialog" aria-labelledby="winName">
+            <button class="win-close" id="winClose" aria-label="Close">&times;</button>
+            <div class="win-img">
+                <img id="winImg" alt="">
+            </div>
+            <div class="win-body">
+                <div>
+                    <strong id="winName"></strong>
+                    <span id="winMeta"></span>
+                </div>
+                <div class="win-row">
+                    <div class="win-nav" id="winNav">
+                        <button id="winPrev" aria-label="Previous photo">&#8249;</button>
+                        <span id="winCount"></span>
+                        <button id="winNext" aria-label="Next photo">&#8250;</button>
+                    </div>
+                    <a class="win-maps" id="winMaps" target="_blank" rel="noopener" title="Open in Google Maps" aria-label="Open in Google Maps">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                            <path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+    <script src="data.js"></script>
     <script src="script.js"></script>
 </body>
-<footer>
-    <div class="footer-content">
-        <!-- Replace with your site title -->
-        <p>&copy; 2025 - Akhil B.</p>
-    </div>
-</footer>
 
 </html>

@@ -37,7 +37,8 @@ export const aboutMe: AboutMe = {
 
 `,
   email: "akhil2002b@gmail.com",
-  imageUrl:"/pictures/home_pic.jpeg",
+  // Fitted Gaussians instead of the raw photo (built by tools/gaussian-portrait)
+  imageUrl: "/pictures/portrait.gsp",
   googleScholarUrl: "https://scholar.google.com/citations?user=Ytra-EoAAAAJ&hl=en",
   githubUsername: "akhilb-2002",
   linkedinUsername: "akhil-b-650a2622a",

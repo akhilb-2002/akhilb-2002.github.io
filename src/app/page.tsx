@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from "react";
 import { EducationEntry } from "@/components/education-entry";
 import { educationData } from "@/data/education";
 import { PublicationEntry } from "@/components/publication-entry";
@@ -14,32 +13,18 @@ import { experienceData } from "@/data/experience";
 import { PortfolioEntry } from "@/components/portfolio-entry";
 import { portfolioData } from "@/data/portfolio";
 import { sectionOrder, Section } from "@/data/section-order";
-import { TerminalWindow } from "@/components/terminal-window";
 
 export default function Home() {
-  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="fixed top-4 right-4 z-40">
-        <button
-          onClick={() => setIsTerminalOpen(true)}
-          className="px-4 py-2 bg-zinc-800 text-white text-xs font-mono rounded-md hover:bg-zinc-700 transition-colors shadow-lg"
-        >
-          DEV
-        </button>
-      </div>
-
-      {isTerminalOpen && <TerminalWindow onClose={() => setIsTerminalOpen(false)} />}
-
       {/* Don't have a great call on whether max-w-screen-xl is better */}
-      <div className="max-w-screen-lg mx-auto px-8 py-24">
+      <div className="max-w-screen-lg mx-auto px-8 pt-32 pb-24">
         {/* Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
           {/* Left Column - Fixed Info */}
           <div className="col-span-12 md:col-span-4 space-y-12 mb-8 md:mb-0">
             {/* Profile */}
-            <div className="md:sticky top-12 space-y-8">
+            <div className="md:sticky top-24 space-y-8">
               <ProfileSection aboutMe={aboutMe} />
             </div>
           </div>
@@ -133,9 +118,9 @@ export default function Home() {
                 case Section.Portfolio:
                   return (
                     portfolioData.length > 0 && (
-                      <section key={sectionName}>
+                      <section key={sectionName} id="portfolio" className="scroll-mt-24">
                         <h2 className="font-serif text-md mb-12 tracking-wide uppercase">
-                          Portfolio
+                          Research Projects
                         </h2>
                         <div className="space-y-12">
                           {portfolioData.map((portfolio, index) => (

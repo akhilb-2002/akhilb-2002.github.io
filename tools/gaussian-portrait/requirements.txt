@@ -1,0 +1,4 @@
+# gsplat-mlx is cloned next to this folder (../gsplat-mlx) and installed in editable mode:
+#   python3 -m venv .venv && .venv/bin/pip install -e ../gsplat-mlx
+# It pulls in mlx, numpy, scipy and pillow.
+-e ../gsplat-mlx

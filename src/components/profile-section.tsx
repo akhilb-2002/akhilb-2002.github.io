@@ -1,13 +1,12 @@
 import Image from "next/image";
 import {
-  ArrowUpRight,
   GraduationCap,
   LucideLinkedin,
 } from "lucide-react";
 import {SiGithub, SiX} from "react-icons/si"
 import { AboutMe } from "@/data/aboutme";
-import Link from "next/link";
 import { ScrambleEmail } from "@/components/scramble-email";
+import { GaussianPortrait } from "@/components/gaussian-portrait";
 
 interface ProfileSectionProps {
   aboutMe: AboutMe;
@@ -19,20 +18,25 @@ export function ProfileSection({ aboutMe }: ProfileSectionProps) {
   }
 
   return (
-    <div className="md:sticky top-12 flex flex-row-reverse md:flex-col gap-4 md:space-y-8">
+    <div className="md:sticky top-24 flex flex-row-reverse md:flex-col gap-4 md:space-y-8">
       {aboutMe.imageUrl && (
         <div className="w-1/3 md:w-full flex-shrink-0">
-          <div className="relative max-h-[45vh] md:w-[65%] aspect-[3/4]">
-            <Image
-              src={aboutMe.imageUrl}
-              alt={aboutMe.name}
-              // fill
-              // priority
-              width= {400}
-              height = {10}
-              className="object-cover rounded-xl"
-            />
-          </div>
+          {aboutMe.imageUrl.endsWith(".gsp") ? (
+            // portrait stored as fitted Gaussians (see tools/gaussian-portrait)
+            <div className="relative md:w-[65%]">
+              <GaussianPortrait src={aboutMe.imageUrl} alt={aboutMe.name} />
+            </div>
+          ) : (
+            <div className="relative max-h-[45vh] md:w-[65%] aspect-[3/4]">
+              <Image
+                src={aboutMe.imageUrl}
+                alt={aboutMe.name}
+                width={400}
+                height={10}
+                className="object-cover rounded-xl"
+              />
+            </div>
+          )}
         </div>
       )}
       <div className="w-2/3 md:w-full">
@@ -60,50 +64,6 @@ export function ProfileSection({ aboutMe }: ProfileSectionProps) {
             aboutMe.institution
           )}
         </p>
-        <div className="flex gap-6 mb-6">
-          {aboutMe.blogUrl && (
-            <a
-              href={aboutMe.blogUrl}
-              className="group inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-900 transition-colors duration-300"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ArrowUpRight
-                size={12}
-                className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
-              />
-              <span className="tracking-wider uppercase">Blog</span>
-            </a>
-          )}
-          {aboutMe.cvUrl && (
-            <a
-              href={aboutMe.cvUrl}
-              className="group inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-900 transition-colors duration-300"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ArrowUpRight
-                size={12}
-                className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
-              />
-              <span className="tracking-wider uppercase">CV</span>
-            </a>
-          )}
-          {aboutMe.personalUrl && (
-            <Link
-              href={aboutMe.personalUrl}
-              className="group inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-900 transition-colors duration-300"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ArrowUpRight
-                size={12}
-                className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"
-              />
-              <span className="tracking-wider uppercase">Travel</span>
-            </Link>
-          )}
-        </div>
         <div className="space-y-2">
           <ScrambleEmail email={aboutMe.email} />
           {aboutMe.googleScholarUrl && (

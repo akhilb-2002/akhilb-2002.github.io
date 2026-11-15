@@ -1,276 +1,442 @@
-/**
- * ---------------------------------------
- * This demo was created using amCharts 5.
- * 
- * For more information visit:
- * https://www.amcharts.com/
- * 
- * Documentation is available at:
- * https://www.amcharts.com/docs/v5/
- * ---------------------------------------
- */
+(() => {
+  "use strict";
 
-// Create root element
-// https://www.amcharts.com/docs/v5/getting-started/#Root_element
-var root = am5.Root.new("chartdiv");
+  const LAND_COARSE_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json";
+  const LAND_FINE_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-50m.json";
+  const LAT_TOP = 80;      // crop the Mercator map to these latitudes
+  const LAT_BOTTOM = -58;  // (drops Antarctica and the far north)
+  // Tiles across the map at zoom 1. Every time the zoom doubles, each tile
+  // splits into 4, so regions get smaller and photo tiles more precise.
+  const COLUMNS = { desktop: 150, tablet: 110, mobile: 72 };
+  const TILE = 0.75;       // tile size as a fraction of grid spacing (rest is the gap)
+  const MAX_ZOOM = 128;
+  const FINE_FROM_LEVEL = 2; // use detailed coastlines from 4x zoom
+  const SUPERSAMPLE = 3;   // samples per tile side when deciding land vs. sea
+  const LAND_COLOR = "#cbbfa9";
 
+  const wrap = document.getElementById("mapWrap");
+  const mapView = document.getElementById("mapView");
+  const canvas = document.getElementById("map");
+  const ctx = canvas.getContext("2d");
+  const spotsEl = document.getElementById("spots");
+  const zoomResetBtn = document.getElementById("zoomReset");
 
-// Set themes
-// https://www.amcharts.com/docs/v5/concepts/themes/
-root.setThemes([
-  am5themes_Animated.new(root)
-]);
+  const win = document.getElementById("win");
+  const winImg = document.getElementById("winImg");
+  const winName = document.getElementById("winName");
+  const winMeta = document.getElementById("winMeta");
+  const winNav = document.getElementById("winNav");
+  const winCount = document.getElementById("winCount");
+  const winMaps = document.getElementById("winMaps");
 
-// List of visited country codes
-const visitedCountries = ["JP", "DE"];
-
-const countryImages = {
-  "JP": [
-    { src: "images/JA/Arashiyama.jpeg", photoBy: "Arashiyama", zone: "Kyoto", link: "https://maps.app.goo.gl/c9hedqDD8p5vpw2M8"},
-    { src: "images/JA/Chureito_Pagoda.jpeg", photoBy: "Chureito Pagoda", zone: "Fuji", link: "https://maps.app.goo.gl/ShzQwHyAD4XpSM3r7" },
-    { src: "images/JA/Fushimiinari.jpeg", photoBy: "Fushimi Inari Taisha", zone: "Kyoto", link: "https://maps.app.goo.gl/RBoHmHFfQMSUTRuv5"},
-    { src: "images/JA/Hakuba_1.jpg", photoBy: "Hakuba", zone: "Nagano", link: "https://maps.app.goo.gl/mL6Ty1TAWfckkAPJ6"},
-    { src: "images/JA/Hitachi_seaside.jpeg", photoBy: "Hitachi Seaside Park", zone: "Ibaraki", link: "https://maps.app.goo.gl/7Qkb3HtGvTUGKfKo9" },
-    { src: "images/JA/Hokokuji.jpeg", photoBy: "Hokoku-ji", zone: "Kamakura", link: "https://maps.app.goo.gl/mUjDSaAmkKVEDYHm8"},
-    { src: "images/JA/Kamakura_Daibutsu.jpeg", photoBy: "Kamakura Daibutsu", zone: "Kamakura" , link: "https://maps.app.goo.gl/z3GoLLTv6oKvxrmMA"},
-    { src: "images/JA/Kamakura.jpeg", photoBy: "Kamakura", zone: "Kamakura" , link: "https://maps.app.goo.gl/z1B9knvngn3Y92PX8"},
-    { src: "images/JA/Karuizawa.jpg", photoBy: "Karuizawa", zone: "Nagano" , link: "https://maps.app.goo.gl/EiVezjj4qq8CCeex9"},
-    { src: "images/JA/Kinkakuji.jpeg", photoBy: "Kinkaku-ji", zone: "Kyoto" , link: "https://maps.app.goo.gl/cCWXeBcHy4K6SxZh7"},
-    { src: "images/JA/Kiyomizudera.jpeg", photoBy: "Kiyomizu-dera", zone: "Kyoto" , link: "https://maps.app.goo.gl/nXtMa7rGQKu3hpDL8"},
-    { src: "images/JA/Lake_Usui.jpg", photoBy: "Lake Usui", zone: "Nagano", link: "https://maps.app.goo.gl/Y3WeoCjaFHstPtP57" },
-    { src: "images/JA/Lake_Yamanaka.jpeg", photoBy: "Lake Yamanaka", zone: "Yamanashi" , link: "https://maps.app.goo.gl/YhrFJJJkXo5kreAH6"},
-    { src: "images/JA/MeijiJingu.jpeg", photoBy: "Meiji Jingu", zone: "Harajuku" , link: "https://maps.app.goo.gl/fF6PwD4GqCaNF4EJ8"},
-    { src: "images/JA/Mocha_cafe.jpeg", photoBy: "Mocha Cafe", zone: "Harajuku", link: "https://maps.app.goo.gl/VVxTDYLoLP8fcJcb7" },
-    { src: "images/JA/Mt.Goryo.jpg", photoBy: "Mt. Goryu", zone: "Nagano" , link: "https://maps.app.goo.gl/yvWLSiu2BZatBAzn9"},
-    { src: "images/JA/Mt.Takao.jpeg", photoBy: "Mt. Takao", zone: "Tokyo" , link: "https://maps.app.goo.gl/dg3omdPK1w9YD9Rb8"},
-    { src: "images/JA/MtTonodake_entrance.jpg", photoBy: "Mt. Tonodake", zone: "Kanagawa" , link: "https://maps.app.goo.gl/JgGbZD1Vb3Vz1tRN9"},
-    { src: "images/JA/MTTonodake.jpg", photoBy: "Mt. Tonodake", zone: "Kanagawa" , link: "https://maps.app.goo.gl/JgGbZD1Vb3Vz1tRN9"},
-    { src: "images/JA/Odaiba_1.jpeg", photoBy: "Odaiba", zone: "Tokyo" , link: "https://maps.app.goo.gl/XWuPsaWgSsuwqsou8"},
-    { src: "images/JA/Odaiba.jpeg", photoBy: "Odaiba", zone: "Tokyo" , link: "https://maps.app.goo.gl/yo63n5FShaGf4gadA"},
-    { src: "images/JA/Osaka_Castle.jpeg", photoBy: "Osaka Castle", zone: "Osaka" , link: "https://maps.app.goo.gl/uzqAJbhVndBckcUb6"},
-    { src: "images/JA/Oshino_Hakkai.jpeg", photoBy: "Oshino Hakkai", zone: "Yamanashi" , link: "https://maps.app.goo.gl/iLeqXgoSj9W8qfJp8"},
-    { src: "images/JA/Sensoji.jpeg", photoBy: "Senso-ji", zone: "Asakusa" , link: "https://maps.app.goo.gl/7b24tZMusbeoAUxo6"},
-    { src: "images/JA/Shibuya_Crossing.jpg", photoBy: "Shibuya Crossing", zone: "Tokyo" , link: "https://maps.app.goo.gl/XuE46moq2AnTrTjeA"},
-    { src: "images/JA/Shibuya.jpg", photoBy: "Shibuya", zone: "Tokyo" , link: "https://maps.app.goo.gl/FFBhPLzkV98VKTEM9"},
-    { src: "images/JA/Shinjuku.jpg", photoBy: "Shinjuku", zone: "Tokyo" , link: "https://maps.app.goo.gl/TNcXxQWs3ZfyVJDP9"},
-    { src: "images/JA/Shitennoji.jpeg", photoBy: "Shitenno-ji", zone: "Osaka" , link: "https://maps.app.goo.gl/6Aay9Rhv2LLkYbY4A"},
-    { src: "images/JA/Skytee.jpg", photoBy: "Tokyo Skytree", zone: "Tokyo" , link: "https://maps.app.goo.gl/p4SUthQRtn8Wc2CF8" },
-    { src: "images/JA/Skytree_Deck.jpeg", photoBy: "Tokyo Skytree Deck", zone: "Tokyo", link: "https://maps.app.goo.gl/p4SUthQRtn8Wc2CF8" },
-    { src: "images/JA/Takaosan.jpeg", photoBy: "Mt. Takao", zone: "Tokyo" , link: "https://maps.app.goo.gl/dg3omdPK1w9YD9Rb8"},
-    { src: "images/JA/Tokyo_Tower.jpeg", photoBy: "Tokyo Tower", zone: "Tokyo" , link: "https://maps.app.goo.gl/bGNUTeuLJfS3nf92A"},
-    { src: "images/JA/Tsuragao_Hachimango.jpeg", photoBy: "Tsurugaoka Hachimangu", zone: "Kamakura" , link: ""},
-    { src: "images/JA/Ueno_Park_2.jpeg", photoBy: "Ueno Park", zone: "Tokyo" , link: "https://maps.app.goo.gl/413qbnaYugFnQRyW6"},
-    { src: "images/JA/Ueno_Park.jpeg", photoBy: "Ueno Toshogu Shrine", zone: "Tokyo" , link: "https://maps.app.goo.gl/6u44n3WkwheHbbRt8"}
-  ],
-  "DE": [
-    { src: "images/DE/Allianz_arena.jpg", photoBy: "Allianz Arena", zone: "Munich", link: "https://maps.app.goo.gl/8mhwsWBLRk4afxr76" },
-    { src: "images/DE/Berlin_Cathedral.jpg",  photoBy: "Berlin Cathedral", zone: "Berlin", link: "https://maps.app.goo.gl/UCzsVSkUbdmYKBae6"  },
-    { src: "images/DE/Berlin_Wall.jpg", photoBy: "Berlin Wall", zone: "Berlin" , link: "https://maps.app.goo.gl/YPkoG9jertjfhBhRA" },
-    { src: "images/DE/Brandenburg_Gate.jpeg", photoBy: "Brandenburg Gate", zone: "Berlin" , link: "https://maps.app.goo.gl/p3tEtxXQ26iVHMsbA" },
-    { src: "images/DE/Cologne_Cathedral.jpg", photoBy: "Cologne Cathedral", zone: "Cologne" , link: "https://maps.app.goo.gl/u7gj6WFysF1TeNYJ9" },
-    { src: "images/DE/Cologne.jpg", photoBy: "Streets of Cologne", zone: "Cologne", link: "https://maps.app.goo.gl/2ZDfbL758ir4JpX36"  },
-    { src: "images/DE/Dusseldorf_street.jpg", photoBy: "Streets of Dusseldorf", zone: "Dusseldorf", link: "https://maps.app.goo.gl/fJRHNSfythv6xyRi8"  },
-    { src: "images/DE/Dusseldorf_towe.jpg", photoBy: "Dusseldorf Tower", zone: "Dusseldorf" , link: "https://maps.app.goo.gl/Ayp6na2cLdZ1idyU6" },
-    { src: "images/DE/Garmisch-Partenkirchen.jpg", photoBy: "Garmisch-Partenkirchen", zone: "Bavaria" , link: "https://maps.app.goo.gl/ka1p1NTwh4wLB45VA" },
-    { src: "images/DE/German_chancellary.jpg", photoBy: "German Chancellery", zone: "Berlin" , link: "https://maps.app.goo.gl/qnv5t54AtZU5z1Qm6" },
-    { src: "images/DE/HNF.jpg", photoBy: "Heinz Nixdorf Institute", zone: "Paderborn" , link: "https://maps.app.goo.gl/xscGjJwjSdkWpBdo7" },
-    { src: "images/DE/Munich_BMW.jpg", photoBy: "Munich BMW Museum", zone: "Munich" , link: "https://maps.app.goo.gl/eut68AqZNMK6Sibp7" },
-    { src: "images/DE/Paderborn_wheel.jpg", photoBy: "Paderborn Wheel", zone: "Paderborn", link: "https://maps.app.goo.gl/dK2G4FV8gqRqT7t86"  },
-    { src: "images/DE/Paderborn.jpg", photoBy: "Paderborn", zone: "Paderborn" , link: "https://maps.app.goo.gl/dK2G4FV8gqRqT7t86" },
-    { src: "images/DE/Schloss_Neuschwenstein.jpg", photoBy: "Schloss Neuschwanstein", zone: "Bavaria" , link: "https://maps.app.goo.gl/LsSpV8DvEqWpBQAfA" },
-    { src: "images/DE/Schloss.jpg", photoBy: "Neuschwenstein from the bus stop", zone: "Bavaria", link: "https://maps.app.goo.gl/LsSpV8DvEqWpBQAfA"  },
-    { src: "images/DE/Schwangau.jpg", photoBy: "Schwangau", zone: "Bavaria", link: "https://maps.app.goo.gl/GUrrh53pGwdpMa9V8"  }
-  ]
-};
-
-
-// Create the map chart
-// https://www.amcharts.com/docs/v5/charts/map-chart/
-var chart = root.container.children.push(am5map.MapChart.new(root, {
-  panX: "rotateX",
-  panY: "rotateY",
-  projection: am5map.geoOrthographic(),
-  paddingBottom: 20,
-  paddingTop: 20,
-  paddingLeft: 20,
-  paddingRight: 20,
-  rotationY: -20 // Add tilt to the globe (20 degrees latitude)
-}));
-
-
-
-// Create main polygon series for countries
-// https://www.amcharts.com/docs/v5/charts/map-chart/map-polygon-series/
-var polygonSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {
-  geoJSON: am5geodata_worldLow 
-}));
-
-polygonSeries.mapPolygons.template.setAll({
-  tooltipText: "{name}",
-  toggleKey: "active",
-  fill: am5.color(0x997f5a),
-  interactive: true
-});
-
-polygonSeries.mapPolygons.template.states.create("hover", {
-  fill: am5.color(0x809459) 
-});
-
-polygonSeries.mapPolygons.template.states.create("active", {
-  fill: am5.color(0x809459) 
-});
-
-
-// Create series for background fill
-// https://www.amcharts.com/docs/v5/charts/map-chart/map-polygon-series/#Background_polygon
-var backgroundSeries = chart.series.push(am5map.MapPolygonSeries.new(root, {}));
-backgroundSeries.mapPolygons.template.setAll({
-  fill:  am5.color(0x997f5a),
-  stroke: am5.color(0x997f5a),
-  
-  fillOpacity: 0.1,
-  strokeOpacity: 0
-});
-backgroundSeries.data.push({
-  geometry: am5map.getGeoRectangle(90, 180, -90, -180)
-});
-
-// Remove graticule (grid) lines
-// var graticuleSeries = chart.series.unshift(
-//   am5map.GraticuleSeries.new(root, {
-//     step: 10
-//   })
-// );
-//
-// graticuleSeries.mapLines.template.set("strokeOpacity", 0.1)
-
-// Set up events
-var previousPolygon;
-let countrySwiper = null; // Variable to hold the Swiper instance
-
-polygonSeries.mapPolygons.template.on("active", function(active, target) {
-  if (previousPolygon && previousPolygon != target) {
-    previousPolygon.set("active", false);
+  // Flatten TRIPS (from data.js) into one list of photos.
+  const photos = [];
+  for (const [code, trip] of Object.entries(TRIPS)) {
+    for (const p of trip.photos) photos.push({ ...p, code, country: trip.name });
   }
-  if (target.get("active")) {
-    selectCountry(target.dataItem.get("id"));
-  }
-  previousPolygon = target;
-});
 
-function selectCountry(id) {
-  var dataItem = polygonSeries.getDataItemById(id);
-  var target = dataItem.get("mapPolygon");
-  if (target) {
-    var centroid = target.geoCentroid();
-    if (centroid) {
-      chart.animate({ key: "rotationX", to: -centroid.longitude, duration: 1500, easing: am5.ease.inOut(am5.ease.cubic) });
-      chart.animate({ key: "rotationY", to: -centroid.latitude, duration: 1500, easing: am5.ease.inOut(am5.ease.cubic) });
-    }
+  const land = { coarse: null, fine: null };
+  let base = null;      // layout at zoom 1: world size W x H, screen VW x VH, ...
+  let level = -1;       // current detail level (tile size = S0 / 2^level)
+  let cache = null;     // land mask for the area around the current view
+  let spots = [];
+  let label = null;
+  let transform = d3.zoomIdentity;
+  const view = { items: [], idx: 0, spot: null };
+  const off = document.createElement("canvas");
+  const offCtx = off.getContext("2d", { willReadFrequently: true });
 
-    // Populate and show Swiper carousel
-    const swiperWrapper = document.querySelector("#countrySwiper .swiper-wrapper");
-    const countrySwiperElement = document.getElementById("countrySwiper");
-    const photoGalleryElement = document.getElementById("photo-gallery");
+  // ---------- Layout ----------
 
-    swiperWrapper.innerHTML = ""; // Clear previous slides
+  // Height / width of the cropped Mercator world.
+  const unit = d3.geoMercator().scale(1 / (2 * Math.PI)).translate([0, 0]);
+  const WORLD_ASPECT = unit([0, LAT_BOTTOM])[1] - unit([0, LAT_TOP])[1];
 
-    const images = countryImages[id];
-    if (images && images.length > 0) {
-      images.forEach(imgData => {
-        const slide = document.createElement("div");
-        slide.classList.add("swiper-slide");
-        slide.style.backgroundImage = `url(${imgData.src})`;
+  // Lay the world out to fit the screen ("contain"). Zoom 1 shows the whole world.
+  function build() {
+    const VW = mapView.clientWidth;
+    const VH = mapView.clientHeight;
+    if (!VW || !VH || !land.coarse) return;
 
-        const infoDiv = document.createElement("div");
-        infoDiv.classList.add("info");
-        // Updated to show only Photo By and Zone
-        infoDiv.innerHTML = `
-          <span>${imgData.photoBy || 'N/A'}</span>
-          <span> ${imgData.zone || 'N/A'}</span>
-        `;
-        slide.appendChild(infoDiv);
+    // keep the same view across resizes (rotation, window resize, etc.)
+    const prev = base && {
+      k: transform.k,
+      cx: (base.VW / 2 - transform.x) / (transform.k * base.W),
+      cy: (base.VH / 2 - transform.y) / (transform.k * base.H),
+    };
 
-        // Add a click event listener to open the link
-        if (imgData.link) {
-          slide.addEventListener("click", function() {
-            window.open(imgData.link, "_blank");
-          });
-        }
+    const W = Math.min(VW, VH / WORLD_ASPECT);
+    const cols0 = W > 900 ? COLUMNS.desktop : W > 600 ? COLUMNS.tablet : COLUMNS.mobile;
+    const S0 = W / cols0;
+    const proj = d3.geoMercator().scale(W / (2 * Math.PI)).translate([W / 2, 0]);
+    proj.translate([W / 2, -proj([0, LAT_TOP])[1]]);
+    const rows0 = Math.floor(proj([0, LAT_BOTTOM])[1] / S0);
+    const H = rows0 * S0;
+    base = { W, H, VW, VH, S0, cols0, rows0, proj };
 
-        swiperWrapper.appendChild(slide);
-      });
+    for (const p of photos) p.xy = proj([p.lng, p.lat]);
 
-      countrySwiperElement.style.display = "block";
-      photoGalleryElement.style.display = "none"; // Hide the old gallery
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(VW * dpr);
+    canvas.height = Math.round(VH * dpr);
 
-      if (countrySwiper) {
-        countrySwiper.destroy(true, true);
-      }
-      countrySwiper = new Swiper(".swiper", {
-        effect: "coverflow",
-        loop: true,
-        grabCursor: true,
-        centeredSlides: true,
-        slidesPerView: "1",
-        coverflowEffect: {
-          rotate: 50,
-          stretch: 0,
-          depth: 100,
-          modifier: 1,
-          slideShadows: true
-        },
-        pagination: {
-          el: ".swiper-pagination"
-        },
-        breakpoints: {
-          320: { slidesPerView: 1.5 },
-          580: { slidesPerView: 2 },
-          767: { slidesPerView: 3 },
-          992: { slidesPerView: 3.5 },
-          1200: { slidesPerView: 4 },
-          1400: { slidesPerView: 4.5 }
-        }
-      });
+    cache = null;
+    level = -1;
+    zoom.extent([[0, 0], [VW, VH]]).translateExtent([[0, 0], [W, H]]);
+
+    let k, cx, cy;
+    if (prev) {
+      ({ k, cx, cy } = prev);
     } else {
-      swiperWrapper.innerHTML = `<p style="text-align:center; width:100%; color:#888; font-size:1.1em; margin:2em 0;">No photos available for this country 😔</p>`;
-      countrySwiperElement.style.display = "block"; // Show swiper to display the message
-      photoGalleryElement.style.display = "none"; // Hide the old gallery
-      if (countrySwiper) {
-        countrySwiper.destroy(true, true);
-        countrySwiper = null;
+      // On tall (portrait) screens the whole world is a thin strip, so start
+      // zoomed in enough to fill most of the height, centred on the photos.
+      k = Math.max(1, Math.min(3, (VH * 0.75) / H));
+      cx = k > 1 ? d3.mean(photos, (p) => p.xy[0]) / W : 0.5;
+      cy = 0.5;
+    }
+    d3.select(mapView).call(zoom.transform, centered(k, cx, cy));
+    draw();
+  }
+
+  // Transform at zoom k with world point (cx, cy) (as 0..1 fractions) at screen centre,
+  // kept inside the map edges.
+  function centered(k, cx, cy) {
+    const { W, H, VW, VH } = base;
+    const fit = (view, size, c) =>
+      view >= size * k ? (view - size * k) / 2 : Math.min(0, Math.max(view - size * k, view / 2 - c * size * k));
+    return d3.zoomIdentity.translate(fit(VW, W, cx), fit(VH, H, cy)).scale(k);
+  }
+
+  // Which cells in [i0..i1] x [j0..j1] at this level are land?
+  // Draws the coastline into a small offscreen canvas (SUPERSAMPLE px per tile)
+  // and counts covered samples per tile.
+  function landMask(lvl, s, i0, i1, j0, j1) {
+    const geo = lvl >= FINE_FROM_LEVEL && land.fine ? land.fine : land.coarse;
+    if (
+      cache && cache.level === lvl && cache.geo === geo &&
+      i0 >= cache.i0 && i1 <= cache.i1 && j0 >= cache.j0 && j1 <= cache.j1
+    ) return cache;
+
+    // rasterize a margin around the view so small pans reuse it
+    const M = 12;
+    const cols = base.cols0 * 2 ** lvl;
+    const rows = base.rows0 * 2 ** lvl;
+    const ci0 = Math.max(0, i0 - M), ci1 = Math.min(cols - 1, i1 + M);
+    const cj0 = Math.max(0, j0 - M), cj1 = Math.min(rows - 1, j1 + M);
+    const ni = ci1 - ci0 + 1, nj = cj1 - cj0 + 1;
+    const w = ni * SUPERSAMPLE, h = nj * SUPERSAMPLE;
+
+    off.width = w;
+    off.height = h;
+    const f = SUPERSAMPLE / s;
+    const [bx, by] = base.proj.translate();
+    const p = d3.geoMercator()
+      .scale(base.proj.scale() * f)
+      .translate([(bx - ci0 * s) * f, (by - cj0 * s) * f])
+      .clipExtent([[-2, -2], [w + 2, h + 2]]);
+    offCtx.clearRect(0, 0, w, h);
+    offCtx.fillStyle = "#000";
+    offCtx.beginPath();
+    d3.geoPath(p, offCtx)(geo);
+    offCtx.fill();
+
+    const alpha = offCtx.getImageData(0, 0, w, h).data;
+    const mask = new Uint8Array(ni * nj);
+    for (let j = 0; j < nj; j++) {
+      for (let i = 0; i < ni; i++) {
+        let hits = 0;
+        for (let y = 0; y < SUPERSAMPLE; y++) {
+          const row = (j * SUPERSAMPLE + y) * w + i * SUPERSAMPLE;
+          for (let x = 0; x < SUPERSAMPLE; x++) {
+            if (alpha[(row + x) * 4 + 3] > 127) hits++;
+          }
+        }
+        mask[j * ni + i] = hits >= 2 ? 1 : 0;
       }
     }
+    cache = { level: lvl, geo, i0: ci0, i1: ci1, j0: cj0, j1: cj1, ni, mask };
+    return cache;
   }
-}
 
-// Uncomment this to pre-center the globe on a country when it loads
-//polygonSeries.events.on("datavalidated", function() {
-//  selectCountry("AU");
-//});
+  function draw() {
+    if (!base) return;
+    const { VW, VH, S0, cols0, rows0 } = base;
+    const { k, x: tx, y: ty } = transform;
+    const dpr = window.devicePixelRatio || 1;
 
+    const lvl = Math.max(0, Math.floor(Math.log2(k) + 1e-6));
+    const s = S0 / 2 ** lvl;           // tile spacing in zoom-1 px
+    const step = s * k;                // tile spacing on screen
+    const t = step * TILE;
+    if (lvl !== level) {
+      level = lvl;
+      buildSpots(s);
+    }
 
-// Animate rotation with tilt
-function startGlobeRotation() {
-  chart.animate({
-    key: "rotationX",
-    to: chart.get("rotationX") + 360,
-    duration: 30000,
-    loops: Infinity,
-    easing: am5.ease.linear
+    const cols = cols0 * 2 ** lvl;
+    const rows = rows0 * 2 ** lvl;
+    const clampI = (v) => Math.max(0, Math.min(cols - 1, v));
+    const clampJ = (v) => Math.max(0, Math.min(rows - 1, v));
+    const i0 = clampI(Math.floor(-tx / step)), i1 = clampI(Math.floor((VW - tx) / step));
+    const j0 = clampJ(Math.floor(-ty / step)), j1 = clampJ(Math.floor((VH - ty) / step));
+    const m = landMask(lvl, s, i0, i1, j0, j1);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, VW, VH);
+    ctx.fillStyle = LAND_COLOR;
+    ctx.beginPath();
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        if (!m.mask[(j - m.j0) * m.ni + (i - m.i0)]) continue;
+        ctx.rect(tx + (i + 0.5) * step - t / 2, ty + (j + 0.5) * step - t / 2, t, t);
+      }
+    }
+    ctx.fill();
+
+    for (const spot of spots) {
+      const [sx, sy] = toScreen(spot);
+      spot.el.style.left = sx + "px";
+      spot.el.style.top = sy + "px";
+      spot.el.style.setProperty("--s", t + "px");
+    }
+    if (label && !label.hidden && label.spot) placeLabel(label.spot);
+
+    mapView.classList.toggle("zoomed", k > 1.01);
+    zoomResetBtn.hidden = k <= 1.01;
+    positionWindow();
+  }
+
+  function toScreen(spot) {
+    return [transform.x + spot.x * transform.k, transform.y + spot.y * transform.k];
+  }
+
+  // ---------- Zoom ----------
+
+  const zoom = d3.zoom()
+    .scaleExtent([1, MAX_ZOOM])
+    .clickDistance(4)
+    // scroll wheel / trackpad / pinch all zoom (the page itself doesn't scroll)
+    .filter((e) => e.type === "wheel" || !e.button)
+    .on("zoom", (e) => {
+      transform = e.transform;
+      requestDraw();
+    });
+
+  let drawPending = 0;
+  function requestDraw() {
+    if (!drawPending) drawPending = requestAnimationFrame(() => { drawPending = 0; draw(); });
+  }
+
+  d3.select(mapView).call(zoom);
+  const zoomBy = (f) => d3.select(mapView).transition().duration(350).call(zoom.scaleBy, f);
+  document.getElementById("zoomIn").addEventListener("click", () => zoomBy(2));
+  document.getElementById("zoomOut").addEventListener("click", () => zoomBy(0.5));
+  zoomResetBtn.addEventListener("click", () =>
+    d3.select(mapView).transition().duration(500).call(zoom.transform, centered(1, 0.5, 0.5)));
+
+  // ---------- Photo tiles ----------
+
+  function regionName(list) {
+    const zones = [...new Set(list.map((p) => p.zone))];
+    const shown = zones.slice(0, 2).join(" / ") + (zones.length > 2 ? ` +${zones.length - 2}` : "");
+    return `${shown}, ${list[0].country}`;
+  }
+
+  function placeLabel(spot) {
+    const [sx, sy] = toScreen(spot);
+    label.style.left = sx + "px";
+    label.style.top = sy + "px";
+  }
+
+  // One clickable tile per grid cell that contains photos, at tile size s.
+  function buildSpots(s) {
+    const byCell = new Map();
+    for (const p of photos) {
+      const i = Math.floor(p.xy[0] / s);
+      const j = Math.floor(p.xy[1] / s);
+      const key = i + "," + j;
+      if (!byCell.has(key)) byCell.set(key, { x: (i + 0.5) * s, y: (j + 0.5) * s, photos: [] });
+      byCell.get(key).photos.push(p);
+    }
+    spots = [...byCell.values()];
+
+    spotsEl.innerHTML = "";
+    label = document.createElement("div");
+    label.className = "spot-label";
+    label.hidden = true;
+    spotsEl.appendChild(label);
+
+    for (const spot of spots) {
+      const n = spot.photos.length;
+      const text = n === 1
+        ? `${spot.photos[0].title}, ${spot.photos[0].zone}`
+        : `${regionName(spot.photos)} · ${n} photos`;
+      const btn = document.createElement("button");
+      btn.className = "spot";
+      btn.setAttribute("aria-label", text);
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openWindow(spot, 0);
+      });
+      btn.addEventListener("dblclick", (e) => e.stopPropagation());
+      const show = () => {
+        label.textContent = text;
+        label.spot = spot;
+        placeLabel(spot);
+        label.hidden = false;
+      };
+      const hide = () => (label.hidden = true);
+      btn.addEventListener("mouseenter", show);
+      btn.addEventListener("focus", show);
+      btn.addEventListener("mouseleave", hide);
+      btn.addEventListener("blur", hide);
+      spot.el = btn;
+      spotsEl.appendChild(btn);
+    }
+
+    // keep an open window attached to the tile now holding its photo
+    if (view.spot) anchorToCurrentPhoto();
+  }
+
+  function anchorToCurrentPhoto() {
+    const current = view.items[view.idx];
+    const spot = spots.find((sp) => sp.photos.includes(current));
+    if (!spot) return closeWindow();
+    if (view.spot && view.spot.el) view.spot.el.classList.remove("active");
+    view.spot = spot;
+    spot.el.classList.add("active");
+  }
+
+  // ---------- Photo window ----------
+
+  function openWindow(spot, idx) {
+    if (view.spot && view.spot.el) view.spot.el.classList.remove("active");
+    view.spot = spot;
+    view.items = spot.photos;
+    spot.el.classList.add("active");
+    if (label) label.hidden = true;
+
+    win.hidden = false;
+    // restart the pop-in animation
+    win.style.animation = "none";
+    void win.offsetWidth;
+    win.style.animation = "";
+
+    showPhoto(idx);
+    positionWindow();
+  }
+
+  function positionWindow() {
+    const spot = view.spot;
+    if (!spot || win.hidden || !base) return;
+    const wrapW = wrap.clientWidth;
+    const wrapH = wrap.clientHeight;
+    const ww = Math.min(320, wrapW - 24);
+    win.style.width = ww + "px";
+    const wh = win.offsetHeight;
+    const [x, y] = toScreen(spot);
+    const tileHalf = (base.S0 / 2 ** Math.max(level, 0)) * transform.k * TILE / 2;
+    const gap = 14 + tileHalf;
+
+    let left, top;
+    if (wrapW < 560) {
+      // narrow screens: open below the tile, or above it if there's no room
+      left = x - ww / 2;
+      top = y + gap + wh <= wrapH - 12 ? y + gap : y - gap - wh;
+    } else {
+      left = x + gap + ww <= wrapW - 12 ? x + gap : x - gap - ww;
+      top = y - wh / 2;
+    }
+    left = Math.max(12, Math.min(left, wrapW - ww - 12));
+    const headerH = document.querySelector(".site-header")?.offsetHeight || 0;
+    top = Math.max(headerH + 12, Math.min(top, wrapH - wh - 12));
+
+    win.style.left = left + "px";
+    win.style.top = top + "px";
+    win.style.setProperty("--ox", x - left + "px");
+    win.style.setProperty("--oy", y - top + "px");
+  }
+
+  function mapsUrl(p) {
+    return p.link || `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+  }
+
+  function showPhoto(i) {
+    const n = view.items.length;
+    view.idx = (i + n) % n;
+    const p = view.items[view.idx];
+
+    winImg.classList.remove("loaded");
+    winImg.onload = () => winImg.classList.add("loaded");
+    winImg.src = p.src;
+    winImg.alt = p.title;
+    if (winImg.complete && winImg.naturalWidth) winImg.classList.add("loaded");
+
+    winName.textContent = p.title;
+    winMeta.textContent = `${p.zone}, ${p.country}`;
+    winMaps.href = mapsUrl(p);
+    winNav.hidden = n < 2;
+    winCount.textContent = `${view.idx + 1} / ${n}`;
+
+    // follow the photo if it sits in a different tile at this zoom level
+    if (view.spot && !view.spot.photos.includes(p)) {
+      anchorToCurrentPhoto();
+      positionWindow();
+    }
+
+    // preload the next photo
+    if (n > 1) new Image().src = view.items[(view.idx + 1) % n].src;
+  }
+
+  function closeWindow() {
+    win.hidden = true;
+    if (view.spot && view.spot.el) view.spot.el.classList.remove("active");
+    view.spot = null;
+  }
+
+  document.getElementById("winClose").addEventListener("click", closeWindow);
+  document.getElementById("winPrev").addEventListener("click", () => showPhoto(view.idx - 1));
+  document.getElementById("winNext").addEventListener("click", () => showPhoto(view.idx + 1));
+
+  document.addEventListener("click", (e) => {
+    if (!win.hidden && !win.contains(e.target) && !e.target.closest(".spot, .zoom-ctrl")) closeWindow();
   });
-}
 
-// Start rotation on load
-startGlobeRotation();
+  document.addEventListener("keydown", (e) => {
+    if (win.hidden) return;
+    if (e.key === "Escape") closeWindow();
+    else if (e.key === "ArrowLeft") showPhoto(view.idx - 1);
+    else if (e.key === "ArrowRight") showPhoto(view.idx + 1);
+  });
 
-// Make stuff animate on load
-chart.appear(1000, 100);
+  // ---------- Resize ----------
 
-polygonSeries.mapPolygons.template.adapters.add("fill", function(fill, target) {
-  const id = target.dataItem && target.dataItem.get("id");
-  if (visitedCountries.includes(id)) {
-    return am5.color(0x92b54e); 
-  }
-  return fill;
-});
+  let lastSize = "";
+  let pending = 0;
+  new ResizeObserver(() => {
+    const size = mapView.clientWidth + "x" + mapView.clientHeight;
+    if (size === lastSize) return;
+    lastSize = size;
+    cancelAnimationFrame(pending);
+    pending = requestAnimationFrame(build);
+  }).observe(mapView);
+
+  // ---------- Load ----------
+
+  const toLand = (topo) => topojson.feature(topo, topo.objects.land);
+
+  d3.json(LAND_COARSE_URL)
+    .then((topo) => {
+      land.coarse = toLand(topo);
+      build();
+      // detailed coastlines for zoomed-in views, loaded in the background
+      return d3.json(LAND_FINE_URL).then((fine) => {
+        land.fine = toLand(fine);
+        requestDraw();
+      }).catch(() => {});
+    })
+    .catch(() => {
+      document.querySelector(".masthead p").textContent =
+        "Couldn't load the world map. Please check your connection and refresh.";
+    });
+})();
