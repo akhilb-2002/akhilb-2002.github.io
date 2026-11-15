@@ -1,0 +1,4 @@
+[submodule "tools/gsplat-mlx"]
+	path = tools/gsplat-mlx
+	url = https://github.com/RobotFlow-Labs/gsplat-mlx
+	branch = main
